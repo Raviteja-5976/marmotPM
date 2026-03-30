@@ -69,7 +69,7 @@ export async function sendWaitlistOtp(formData: FormData) {
     const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER;
 
     const mailOptions = {
-      from: `"MarmotPM" <${fromEmail}>`,
+      from: `"no-reply MarmotPM" <${fromEmail}>`,
       to: email,
       subject: "Your MarmotPM Verification Code",
       html: `
@@ -136,7 +136,7 @@ export async function verifyWaitlistOtp(email: string, otpInput: string) {
     const fromEmail = process.env.SMTP_USER; 
     
     const mailOptions = {
-      from: `"MarmotPM" <${fromEmail}>`, 
+      from: `"Founder MarmotPM" <${fromEmail}>`, 
       to: email,
       subject: "Welcome to MarmotPM Waitlist! 🚀",
       html: `
