@@ -73,18 +73,21 @@ export async function sendWaitlistOtp(formData: FormData) {
       to: email,
       subject: "Your MarmotPM Verification Code",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #fdf9f3; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center;">
-          <img src="cid:marmotlogo" alt="MarmotPM Logo" style="width: 80px; height: 80px; margin-bottom: 10px;" />
-          <h1 style="color: #6d4c41; margin-bottom: 20px;">Verify your email</h1>
-          <p style="color: #4b5563; font-size: 16px;">Here is your 6-digit confirmation code:</p>
-          <div style="background-color: #fff; padding: 15px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #ea580c; display: inline-block; margin: 20px 0;">
-            ${otp}
-          </div>
-          <p style="color: #4b5563; font-size: 14px; margin-top: 30px;">
-            If you didn't request this, please ignore this email.
-          </p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #fdf9f3; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb;">
+          <center>
+            <img src="cid:marmotlogo" alt="MarmotPM Logo" style="width: 80px; height: 80px; margin-bottom: 10px; display: block;" />
+            <h1 style="color: #6d4c41; margin-bottom: 20px;">Verify your email</h1>
+            <p style="color: #4b5563; font-size: 16px;">Here is your 6-digit confirmation code:</p>
+            <div style="background-color: #fff; padding: 15px; border-radius: 8px; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #ea580c; display: inline-block; margin: 20px 0; text-align: center;">
+              ${otp}
+            </div>
+            <p style="color: #4b5563; font-size: 14px; margin-top: 30px;">
+              If you didn't request this, please ignore this email.
+            </p>
+          </center>
         </div>
       `,
+      text: `Verify your email. Your 6-digit confirmation code is: ${otp}`,
       attachments: [{
         filename: 'marmot-logo.png',
         path: process.cwd() + '/public/logo/marmot-logo.png',
@@ -137,24 +140,25 @@ export async function verifyWaitlistOtp(email: string, otpInput: string) {
       to: email,
       subject: "Welcome to MarmotPM Waitlist! 🚀",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #fdf9f3; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; text-align: center;">
-          <img src="cid:marmotlogo" alt="MarmotPM Logo" style="width: 80px; height: 80px; margin-bottom: 10px;" />
-          <h1 style="color: #6d4c41; margin-bottom: 20px;">You're officially on the list!</h1>
-          <div style="text-align: left;">
-            <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
-              Hi there,
-            </p>
-            <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
-              Thank you for joining the MarmotPM waitlist! We are absolutely thrilled to have you on board.
-              You'll be the first to know when we launch our AI Project Manager.
-            </p>
-            <p style="color: #4b5563; font-size: 14px; margin-top: 40px; border-top: 1px solid #d1d5db; padding-top: 20px;">
-              Cheers,<br>
-              <strong>The MarmotPM Team</strong>
-            </p>
-          </div>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #fdf9f3; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb;">
+          <center>
+            <img src="cid:marmotlogo" alt="MarmotPM Logo" style="width: 80px; height: 80px; margin-bottom: 10px; display: block;" />
+          </center>
+          <h1 style="color: #6d4c41; margin-bottom: 20px; text-align: center;">You're officially on the list!</h1>
+          <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+            Hi there,
+          </p>
+          <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+            Thank you for joining the MarmotPM waitlist! We are absolutely thrilled to have you on board.
+            You'll be the first to know when we launch our AI Project Manager.
+          </p>
+          <p style="color: #4b5563; font-size: 14px; margin-top: 40px; border-top: 1px solid #d1d5db; padding-top: 20px;">
+            Cheers,<br>
+            <strong>The MarmotPM Team</strong>
+          </p>
         </div>
       `,
+      text: `You're officially on the list! Thank you for joining the MarmotPM waitlist. You'll be the first to know when we launch our AI Project Manager.`,
       attachments: [{
         filename: 'marmot-logo.png',
         path: process.cwd() + '/public/logo/marmot-logo.png',
