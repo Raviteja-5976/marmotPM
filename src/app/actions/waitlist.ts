@@ -1,18 +1,14 @@
 "use server";
 
 import nodemailer from "nodemailer";
-import { Client, Databases, ID, Query } from "node-appwrite";
+import { createClient } from "@supabase/supabase-js";
 
-// Appwrite setup
-const client = new Client()
-  .setEndpoint(process.env.APPWRITE_ENDPOINT || "https://cloud.appwrite.io/v1")
-  .setProject(process.env.APPWRITE_PROJECT_ID || "")
-  .setKey(process.env.APPWRITE_API_KEY || "");
+// Supabase setup
+const supabaseUrl = process.env.SUPABASE_URL || "";
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-const databases = new Databases(client);
-
-const DB_ID = process.env.APPWRITE_DB_ID || "";
-const COLLECTION_ID = process.env.APPWRITE_COLLECTION_ID || "";
+const TABLE_NAME = process.env.SUPABASE_TABLE_NAME || "waitlist_users";
 
 function getTransporter() {
   return nodemailer.createTransport({
@@ -33,7 +29,7 @@ export async function sendWaitlistOtp(formData: FormData) {
     return { success: false, error: "Email is required" };
   }
 
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.APPWRITE_PROJECT_ID) {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { success: false, error: "Server configuration missing." };
   }
 
@@ -41,27 +37,43 @@ export async function sendWaitlistOtp(formData: FormData) {
     const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
 
     // Check if user already exists
-    const existingUsers = await databases.listDocuments(DB_ID, COLLECTION_ID, [
-      Query.equal("email", email)
-    ]);
+    const { data: existingUsers, error: fetchError } = await supabase
+      .from(TABLE_NAME)
+      .select("*")
+      .eq("email", email);
 
-    if (existingUsers.documents.length > 0) {
-      const userDoc = existingUsers.documents[0];
+    if (fetchError) {
+      throw new Error(`Failed to fetch user: ${fetchError.message}`);
+    }
+
+    if (existingUsers && existingUsers.length > 0) {
+      const userDoc = existingUsers[0];
       if (userDoc.verified) {
         return { success: true, alreadyExists: true, message: "You are already in the waitlist." };
       } else {
         // Update existing user's OTP
-        await databases.updateDocument(DB_ID, COLLECTION_ID, userDoc.$id, {
-          OTP: otp,
-        });
+        const { error: updateError } = await supabase
+          .from(TABLE_NAME)
+          .update({ otp: otp })
+          .eq("id", userDoc.id);
+
+        if (updateError) {
+          throw new Error(`Failed to update OTP: ${updateError.message}`);
+        }
       }
     } else {
       // Create new user
-      await databases.createDocument(DB_ID, COLLECTION_ID, ID.unique(), {
-        email: email,
-        OTP: otp,
-        verified: false,
-      });
+      const { error: insertError } = await supabase
+        .from(TABLE_NAME)
+        .insert([{
+          email: email,
+          otp: otp,
+          verified: false,
+        }]);
+
+      if (insertError) {
+        throw new Error(`Failed to insert user: ${insertError.message}`);
+      }
     }
 
     // Send OTP email
@@ -106,18 +118,19 @@ export async function sendWaitlistOtp(formData: FormData) {
 
 export async function verifyWaitlistOtp(email: string, otpInput: string) {
   try {
-    const existingUsers = await databases.listDocuments(DB_ID, COLLECTION_ID, [
-      Query.equal("email", email)
-    ]);
+    const { data: existingUsers, error: fetchError } = await supabase
+      .from(TABLE_NAME)
+      .select("*")
+      .eq("email", email);
 
-    if (existingUsers.documents.length === 0) {
+    if (fetchError || !existingUsers || existingUsers.length === 0) {
       return { success: false, error: "Email not found. Please sign up first." };
     }
 
-    const userDoc = existingUsers.documents[0];
+    const userDoc = existingUsers[0];
     
     // Check if OTP matches
-    const storedOtp = userDoc.OTP.toString();
+    const storedOtp = userDoc.otp?.toString();
     if (storedOtp !== otpInput.toString()) {
       return { success: false, error: "Invalid OTP. Please try again." };
     }
@@ -127,9 +140,14 @@ export async function verifyWaitlistOtp(email: string, otpInput: string) {
     }
 
     // Mark as verified
-    await databases.updateDocument(DB_ID, COLLECTION_ID, userDoc.$id, {
-      verified: true
-    });
+    const { error: updateError } = await supabase
+      .from(TABLE_NAME)
+      .update({ verified: true })
+      .eq("id", userDoc.id);
+
+    if (updateError) {
+      throw new Error(`Failed to update verification status: ${updateError.message}`);
+    }
 
     // Send Final welcome email from founder
     const transporter = getTransporter();
